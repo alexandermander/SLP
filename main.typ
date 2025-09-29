@@ -5,8 +5,6 @@
 #let date = datetime.today().display("[month repr:long] [day], [year]")
 #set enum(numbering: "a)")
 
-
-
 // Modify some arguments, which can be overwritten in the template call
 
 #page-args.insert("numbering", "1/1")
@@ -15,7 +13,7 @@
 #text-args-authors.insert("size", 12pt)
 
 #show: template.with(
-  title: "Semester Learning Portfolio ",
+  title: "Semester Learning Portfolio",
   authors: (
     (name: "Alexander Schandorf Sumczynski"),
   ),
@@ -31,44 +29,49 @@
 )
 
 #pagebreak()
-//
-//== Introduction for typst
-//
-//$
-//  sum_(k=1)^n k = (n(n+1)) / 2
-//$<equation>
-//
-//$
-//  exp(x) = sum_(n=0)^oo (x^n) / n!
-//$
-//
-//As we can see, it is not numbered.
-//
-//== Theorems
-//
-//The template uses #link("https://typst.app/universe/package/great-theorems/")[`great-theorems`] for theorems. Here is an example of a theorem:
-//
-//#theorem(title: "Example Theorem")[
-//  This is an example theorem.
-//]<th:example>
-//#proof[
-//  This is the proof of the example theorem.
-//]
-//
-//We also provide `definition`, `lemma`, `remark`, `example`, and `question`s among others. Here is an example of a definition:
-//
-//#definition(title: "Example Definition")[
-//  This is an example definition.
-//]
-//
-//#question(title: "Custom mathblock?")[
-//  How do you define a custom mathblock?
-//]
-//
+
+== Introduction for typst
+
+$
+  sum_(k=1)^n k = (n(n+1)) / 2
+$<equation>
+
+$
+  exp(x) = sum_(n=0)^oo (x^n) / n!
+$
+
+As we can see, it is not numbered.
+
+== Theorems
+
+The template uses #link("https://typst.app/universe/package/great-theorems/")[`great-theorems`] for theorems. Here is an example of a theorem:
+
+#theorem(title: "Example Theorem")[
+  This is an example theorem.
+]<th:example>
+#proof[
+  This is the proof of the example theorem.
+]
+
+We also provide `definition`, `lemma`, `remark`, `example`, and `question`s among others. Here is an example of a definition:
+
+#definition(title: "Example Definition")[
+  This is an example definition.
+]
+
+#question(title: "Custom mathblock?")[
+  How do you define a custom mathblock?
+]
+
 #let answer = my-mathblock(
   blocktitle: "Answer",
-breakable: true
+  breakable: true
   //bodyfmt: text.with(style: "italic"),
+)
+
+#let notes  = my-mathblock(
+  blocktitle: "Notes",
+  breakable: true
 )
 //
 
@@ -96,7 +99,34 @@ breakable: true
 //
 //
 
-= Authentication + Link Layer Security
+
+= Authentication + Link Layer Security: Lecture One
+
+== Notes leacure one
+
+#notes(title:"Remote User - Authenticationusing Asymmetric Encryption")[
+
+
+$
+"A" -> "AS": & italic("ID")_A || italic("ID")_B \ 
+"AS" -> "A": & "E"(italic("PR")_italic("as"), [italic("ID")_A || italic("PU")_a || T]) || "E"(italic("PR")_italic("as"), [italic("ID")_B || italic("PU")_b || T]) \
+"A" -> "B": & "E"(italic("PR")_italic("as"), [italic("ID")_A || italic("PU")_a || T]) || "E"(italic("PR")_italic("as"), [italic("ID")_B || italic("PU")_b || T]) || "E"(italic("PU")_b, "E"(italic("PR")_a, [K_s || T]))
+$
+
+
+$
+"A" -> "KDC": & italic("ID")_A || italic("ID")_B \
+"KDC" -> "A": & "E"(italic("PR")_"auth", [italic("ID")_B || italic("PU")_b]) \
+"A" -> "B": & "E"(italic("PU")_b, [N_a || italic("ID")_A]) \
+"B" -> "KDC": & italic("ID")_A || italic("ID")_B || "E"(italic("PU")_"auth", N_a) \
+"KDC" -> "B": & "E"(italic("PR")_"auth", [italic("ID")_A || italic("PU")_a]) || "E"(italic("PU")_b, "E"(italic("PR")_"auth", [N_a || K_s || italic("ID")_A || italic("ID")_B])) \
+"B" -> "A": & "E"(italic("PU")_a, [N_b || "E"(italic("PR")_"auth", [N_a || K_s || italic("ID")_A || italic("ID")_B])]) \
+"A" -> "B": & "E"(K_s, N_b)
+$
+
+
+]
+
 == Network Security Assignment part 1
 
 #assignment[ 
@@ -192,10 +222,8 @@ hosts. From now on, we refer to our two targets hosts as victims.
 			Kali Linux where the Man-in-the-Middle attack will be
 			performed. The network is connected to a NAT network
 			through my local machine. 
-
-
 			#figure(
-			  image("Screenshot 2025-09-19 143715.png", width: 120%),
+			  image("screen/Screenshot 2025-09-19 143715.png", width: 120%),
 			  caption: [
 				The two Lubuntu machines
 			  ],
@@ -219,7 +247,7 @@ hosts. From now on, we refer to our two targets hosts as victims.
 			attack.
 
 			#figure(
-			  image("Screenshot 2025-09-19 143910.png", width: 120%),
+			  image("screen/Screenshot 2025-09-19 143910.png", width: 120%),
 			  caption: [
 				The two Lubuntu machines
 			  ],
@@ -239,6 +267,18 @@ hosts. From now on, we refer to our two targets hosts as victims.
 
 ]
 
+
+= TCP/IP Internet Layer Security
+
+== leacure notes
+
+#notes(title: "Layer/Network Layer", weight: "bold")[
+  this is the text
+
+  //\
+  //#text(size: 1.2em, weight: "bold")[ Layer/Network Layer ]
+  //\
+]
 
 
 //#bibliography("bibliography.bib")
