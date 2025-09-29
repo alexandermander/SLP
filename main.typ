@@ -261,11 +261,12 @@ hosts. From now on, we refer to our two targets hosts as victims.
 			targets, the traffic can now be seen on the Kali machine,
 			as shown in the image. In this, Wireshark is capturing the
 			traffic between the two machines.
-
 		]
 	)
 
 ]
+
+=  Network Layer Security
 
 
 = TCP/IP Internet Layer Security
@@ -474,7 +475,3 @@ sshpass -p "password" ssh ${NODE1_USER}@${NODE1} "echo 'password' | sudo -S sed 
 sshpass -p "password" ssh ${NODE2_USER}@${NODE2} "echo 'password' | sudo -S sed -i 's/type=transport/type=tunnel/' /etc/ipsec.conf"
 
 ```
-
-
-
-
