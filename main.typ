@@ -233,21 +233,221 @@ hosts. From now on, we refer to our two targets hosts as victims.
 			targets, the traffic can now be seen on the Kali machine,
 			as shown in the image. In this, Wireshark is capturing the
 			traffic between the two machines.
-
 		]
 	)
 
 ]
 
+=  Network Layer Security
 
+== Assignment Experiencing IPsec (Group) part one
+
+Group:
+\ Alexander Sumczynski, Marcus Kolbe, Luca, 
+
+We did the this exesice in bash and asnwed with a scpript whre we
+cateuted alle the files thing in the one singen scpript, to see the
+scpript that go to @bash-network1
+
+
+
+
+#pagebreak()
+
+== Assignment VPN part two
+
+#v(1em)
+
+
+#text(strong("SSL/TLS VPNs vs IPsec:") )
+
+SSL/TLS VPNs are a method to establish a VPN connection over the TLS
+protocol. They use the HTTPS protocol to communicate and encrypt data.
+The way it works is that the client’s packets are encapsulated inside
+TLS encryption and sent to the VPN server. The VPN server decrypts the
+packets and forwards the traffic to the final destination on behalf of
+the client. The response from the destination server is then returned
+to the VPN server, which re-encapsulates it in TLS and sends it back
+to the client. Since SSL/TLS VPNs operate over HTTPS, they are
+firewall-friendly. The SSL/TLS VPN protocol operates at the
+application layer. Comparing this protocol with IPsec. IPsec
+operates at the network layer, and therefore the protocol needs to
+establish a key-exchange method. There are two main methods: Internet
+Key Exchange (IKEv1) and Internet Key Exchange version 2 (IKEv2).
+Compared to IPsec, SSL/TLS VPNs are more effective at bypassing normal
+firewalls, since IPsec traffic can sometimes be blocked or require
+extra configuration.
+
+#text(strong("WireGuard  vs IPsec:") )
+
+The WireGuard is a more modern VPN. It uses the following protocols:
+
+- ChaCha20 for symmetric encryption, authenticated with Poly1305,
+- Curve25519 for key exchange,
+- SipHash24,
+- BLAKE2s for hashing,
+- HKDF for key derivation.
+
+
+One of the features that WireGuard is primarily designed for is its
+integration in the Linux kernel, which makes installation and setup
+easy. WireGuard uses Curve25519 to derive the key-exchange method.
+Another technique that WireGuard uses is frequent rotation of the
+session keys, which makes the protocol more secure while still
+maintaining the fast connection that is one of the key features of
+WireGuard.
+
+To compare this protocol to IPsec: both operate in the same network
+stack at Layer 3, but WireGuard has a much smaller code base, whereas
+IPsec has a much larger code base that makes IPsec more  configurable
+and able to run on most operating systems. This lean design also means
+WireGuard is easier to audit and maintain, reducing the potential
+attack surface compared to the more complex IPsec implementation.
+While IPsec supports a wide range of cipher suites and authentication
+methods, which contributes to its flexibility, this complexity can
+also lead to more configuration errors and higher administrative
+overhead. WireGuard, by contrast, focuses on a fixed set of modern
+cryptographic primitives, providing strong security with minimal
+configuration and typically faster connection setup.
 
 //#bibliography("bibliography.bib")
 //
-//== Appendix section
+
+#pagebreak()
+
+== Appendix section
 //
-//#show: appendices
+#show: appendices
+
+= Bash code Network Layer Security part one
+#label("bash-network1")
+
+```bash
+#!/usr/bin/env bash
+
+NODE1="192.168.122.77"
+NODE1_USER="alice"
+NODE2="192.168.122.122"
+NODE2_USER="bob"
+
+TIME=5
+
+## No encryption
+
+# Stop strongswan on machines
+sshpass -p "password" ssh ${NODE1_USER}@${NODE1} "echo 'password' | sudo -S systemctl stop strongswan-starter.service"
+sshpass -p "password" ssh ${NODE2_USER}@${NODE2} "echo 'password' | sudo -S systemctl stop strongswan-starter.service"
+
+# Wait a moment
+sleep 1
+
+# Start capture
+sshpass -p "password" ssh ${NODE1_USER}@${NODE1} "tshark -w unenc_capture.pcap -i enp7s0 & sleep ${TIME} && killall tshark" &
+sshpass -p "password" ssh ${NODE2_USER}@${NODE2} "tshark -w unenc_capture.pcap -i enp7s0 & sleep ${TIME} && killall tshark" &
+
+# Wait a moment
+sleep 1
+
+# Make traffic
+sshpass -p "password" ssh ${NODE1_USER}@${NODE1} "curl http://192.168.200.153" &
+
+# Wait
+sleep $(( $TIME + 2 ))
+
+# Get capture files
+sshpass -p "password" scp ${NODE1_USER}@${NODE1}:unenc_capture.pcap node1_unenc_capture.pcap
+sshpass -p "password" scp ${NODE2_USER}@${NODE2}:unenc_capture.pcap node2_unenc_capture.pcap
+
+## IKE handshake
+
+# Start capture
+sshpass -p "password" ssh ${NODE1_USER}@${NODE1} "tshark -w ikehandshake_capture.pcap -i enp7s0 & sleep ${TIME} && killall tshark" &
+sshpass -p "password" ssh ${NODE2_USER}@${NODE2} "tshark -w ikehandshake_capture.pcap -i enp7s0 & sleep ${TIME} && killall tshark" &
+
+# Wait a moment
+sleep 1
+
+# Start strongswan on machines
+sshpass -p "password" ssh ${NODE1_USER}@${NODE1} "echo 'password' | sudo -S systemctl start strongswan-starter.service" &
+sshpass -p "password" ssh ${NODE2_USER}@${NODE2} "echo 'password' | sudo -S systemctl start strongswan-starter.service" &
+
+# Wait
+sleep $(( $TIME + 2 ))
+
+# Get capture files
+sshpass -p "password" scp ${NODE1_USER}@${NODE1}:ikehandshake_capture.pcap node1_ikehandshake_capture.pcap
+sshpass -p "password" scp ${NODE2_USER}@${NODE2}:ikehandshake_capture.pcap node2_ikehandshake_capture.pcap
+
+## Get encrypted traffic
+
+# Start capture
+sshpass -p "password" ssh ${NODE1_USER}@${NODE1} "tshark -w esp_capture.pcap -i enp7s0 & sleep ${TIME} && killall tshark" &
+sshpass -p "password" ssh ${NODE2_USER}@${NODE2} "tshark -w esp_capture.pcap -i enp7s0 & sleep ${TIME} && killall tshark" &
+
+# Wait a moment
+sleep 1
+
+# Make traffic
+sshpass -p "password" ssh ${NODE1_USER}@${NODE1} "curl http://192.168.200.153" &
+
+# Wait
+sleep $(( $TIME + 2 ))
+
+# Get capture files
+sshpass -p "password" scp ${NODE1_USER}@${NODE1}:esp_capture.pcap node1_esp_capture.pcap
+sshpass -p "password" scp ${NODE2_USER}@${NODE2}:esp_capture.pcap node2_esp_capture.pcap
+
+## Get Tunnel vs Transport capture (tunnel is default, so we do transport here. (with fuckery))
+
+# Bring the ipsec tunnel down
+sshpass -p "password" ssh ${NODE1_USER}@${NODE1} "echo 'password' | sudo -S systemctl stop strongswan-starter.service"
+sshpass -p "password" ssh ${NODE2_USER}@${NODE2} "echo 'password' | sudo -S systemctl stop strongswan-starter.service"
+
+# Wait a moment
+sleep 1
+
+# Change the config file
+sshpass -p "password" ssh ${NODE1_USER}@${NODE1} "echo 'password' | sudo -S sed -i 's/type=tunnel/type=transport/' /etc/ipsec.conf "
+sshpass -p "password" ssh ${NODE2_USER}@${NODE2} "echo 'password' | sudo -S sed -i 's/type=tunnel/type=transport/' /etc/ipsec.conf"
+
+# Wait a moment
+sleep 1
+
+# Bring up ipsec again
+sshpass -p "password" ssh ${NODE1_USER}@${NODE1} "echo 'password' | sudo -S systemctl start strongswan-starter.service" &
+sshpass -p "password" ssh ${NODE2_USER}@${NODE2} "echo 'password' | sudo -S systemctl start strongswan-starter.service" &
+
+# Wait a moment
+sleep 1
+
+# Start capture
+sshpass -p "password" ssh ${NODE1_USER}@${NODE1} "tshark -w transport_capture.pcap -i enp7s0 & sleep ${TIME} && killall tshark" &
+sshpass -p "password" ssh ${NODE2_USER}@${NODE2} "tshark -w transport_capture.pcap -i enp7s0 & sleep ${TIME} && killall tshark" &
+
+# Wait a moment
+sleep 1
+
+# Make traffic
+sshpass -p "password" ssh ${NODE1_USER}@${NODE1} "curl http://192.168.200.153" &
+
+# Wait
+sleep $(( $TIME + 2 ))
+
+# Get capture files
+sshpass -p "password" scp ${NODE1_USER}@${NODE1}:transport_capture.pcap node1_transport_capture.pcap
+sshpass -p "password" scp ${NODE2_USER}@${NODE2}:transport_capture.pcap node2_transport_capture.pcap
+
+# Stop ipsec again
+sshpass -p "password" ssh ${NODE1_USER}@${NODE1} "echo 'password' | sudo -S systemctl stop strongswan-starter.service"
+sshpass -p "password" ssh ${NODE2_USER}@${NODE2} "echo 'password' | sudo -S systemctl stop strongswan-starter.service"
+
+# Revert the change
+sshpass -p "password" ssh ${NODE1_USER}@${NODE1} "echo 'password' | sudo -S sed -i 's/type=transport/type=tunnel/' /etc/ipsec.conf"
+sshpass -p "password" ssh ${NODE2_USER}@${NODE2} "echo 'password' | sudo -S sed -i 's/type=transport/type=tunnel/' /etc/ipsec.conf"
+
+```
+
+
 //
 //#lorem(100)
-
-
 
