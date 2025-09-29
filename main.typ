@@ -266,9 +266,6 @@ hosts. From now on, we refer to our two targets hosts as victims.
 
 ]
 
-=  Network Layer Security
-
-
 = TCP/IP Internet Layer Security
 
 == Assignment Experiencing IPsec (Group) part one
@@ -276,10 +273,64 @@ hosts. From now on, we refer to our two targets hosts as victims.
 Group:
 \ Alexander Sumczynski, Marcus Kolbe, Luca, 
 
-We did the this exesice in bash and asnwed with a scpript whre we
-cateuted alle the files thing in the one singen scpript, to see the
-scpript that go to @bash-network1
+#text(strong("Task 1:") )
+In the firt part of the start is setting up the two system ubunto severs that suold communicate
+toghter, 
 
+#figure(
+  image("screen/bobpingalice.png", width: 100%),
+  caption: [
+  The two Lubuntu machines: alice and bob
+  ],
+
+) <fig:bobpingalice>
+
+In @fig:bobpingalice shows how after sinnign up the config files that alcie macinge can ping
+the bob virtuel maicnge 
+\
+#text(strong("Task 2 Pre-IPsec Capture:") )
+\
+
+In Task 2, setting up the capture traffic between the two virtual machines will first happen after
+some traffic has been passed through the system. Observing these packets being sent is just normal
+traffic that is not encrypted or anything. I can see the GET request to the Bob machine that is
+hosting an Apache2 service, so all the TCP handshakes and the GET/response is plain text
+
+#text(strong("Task 3 Capturing IKE:") )
+\
+
+Now starting tshark, then launching the IPsec services. This will allow the capture of the IKE (Internet
+Key Exchange) packets. The IPsec service is stopped first so that the initial packets can be captured.
+
+#question(title: "What parameters are negotiated during the IKE exchange?", width: auto)[
+  While observing the negotiation, several parameters are mentioned: an integrity algorithm,
+  pseudo-random function, and the Diffie-Hellman key exchange. These different values can be seen in
+  the payload packed
+]
+
+#text(strong("Task 4 Capturing ESP:") )
+\
+
+#question(title: "What differences do you notice between the captured ESP packets and the plaintext packets from Task 2?", width: auto)[
+Observing the packets from Task 2 that are in plaintext, and then the packets that are
+encapsulated inside an ESP packet, the information is encrypted and scrambled.
+]
+
+#question(title: "Why is the payload data not visible in the ESP packet? (put screenshots on your
+  report to show that)", width: auto)[
+
+The payload data is not visible in the ESP packet because IPsec’s Encapsulating Security Payload (ESP) protocol encrypts it. 
+
+#figure(
+  image("screen/eps.png", width: 100%),
+  caption: [
+    ESP traffic
+  ],
+) <fig:esp>
+
+  As seen in the @fig:esp is the is the screen shot of the ESP filter
+
+]
 
 #pagebreak()
 
@@ -351,127 +402,3 @@ configuration and typically faster connection setup.
 = Bash code Network Layer Security part one
 #label("bash-network1")
 
-```bash
-#!/usr/bin/env bash
-
-NODE1="192.168.122.77"
-NODE1_USER="alice"
-NODE2="192.168.122.122"
-NODE2_USER="bob"
-
-TIME=5
-
-## No encryption
-
-# Stop strongswan on machines
-sshpass -p "password" ssh ${NODE1_USER}@${NODE1} "echo 'password' | sudo -S systemctl stop strongswan-starter.service"
-sshpass -p "password" ssh ${NODE2_USER}@${NODE2} "echo 'password' | sudo -S systemctl stop strongswan-starter.service"
-
-# Wait a moment
-sleep 1
-
-# Start capture
-sshpass -p "password" ssh ${NODE1_USER}@${NODE1} "tshark -w unenc_capture.pcap -i enp7s0 & sleep ${TIME} && killall tshark" &
-sshpass -p "password" ssh ${NODE2_USER}@${NODE2} "tshark -w unenc_capture.pcap -i enp7s0 & sleep ${TIME} && killall tshark" &
-
-# Wait a moment
-sleep 1
-
-# Make traffic
-sshpass -p "password" ssh ${NODE1_USER}@${NODE1} "curl http://192.168.200.153" &
-
-# Wait
-sleep $(( $TIME + 2 ))
-
-# Get capture files
-sshpass -p "password" scp ${NODE1_USER}@${NODE1}:unenc_capture.pcap node1_unenc_capture.pcap
-sshpass -p "password" scp ${NODE2_USER}@${NODE2}:unenc_capture.pcap node2_unenc_capture.pcap
-
-## IKE handshake
-
-# Start capture
-sshpass -p "password" ssh ${NODE1_USER}@${NODE1} "tshark -w ikehandshake_capture.pcap -i enp7s0 & sleep ${TIME} && killall tshark" &
-sshpass -p "password" ssh ${NODE2_USER}@${NODE2} "tshark -w ikehandshake_capture.pcap -i enp7s0 & sleep ${TIME} && killall tshark" &
-
-# Wait a moment
-sleep 1
-
-# Start strongswan on machines
-sshpass -p "password" ssh ${NODE1_USER}@${NODE1} "echo 'password' | sudo -S systemctl start strongswan-starter.service" &
-sshpass -p "password" ssh ${NODE2_USER}@${NODE2} "echo 'password' | sudo -S systemctl start strongswan-starter.service" &
-
-# Wait
-sleep $(( $TIME + 2 ))
-
-# Get capture files
-sshpass -p "password" scp ${NODE1_USER}@${NODE1}:ikehandshake_capture.pcap node1_ikehandshake_capture.pcap
-sshpass -p "password" scp ${NODE2_USER}@${NODE2}:ikehandshake_capture.pcap node2_ikehandshake_capture.pcap
-
-## Get encrypted traffic
-
-# Start capture
-sshpass -p "password" ssh ${NODE1_USER}@${NODE1} "tshark -w esp_capture.pcap -i enp7s0 & sleep ${TIME} && killall tshark" &
-sshpass -p "password" ssh ${NODE2_USER}@${NODE2} "tshark -w esp_capture.pcap -i enp7s0 & sleep ${TIME} && killall tshark" &
-
-# Wait a moment
-sleep 1
-
-# Make traffic
-sshpass -p "password" ssh ${NODE1_USER}@${NODE1} "curl http://192.168.200.153" &
-
-# Wait
-sleep $(( $TIME + 2 ))
-
-# Get capture files
-sshpass -p "password" scp ${NODE1_USER}@${NODE1}:esp_capture.pcap node1_esp_capture.pcap
-sshpass -p "password" scp ${NODE2_USER}@${NODE2}:esp_capture.pcap node2_esp_capture.pcap
-
-## Get Tunnel vs Transport capture (tunnel is default, so we do transport here. (with fuckery))
-
-# Bring the ipsec tunnel down
-sshpass -p "password" ssh ${NODE1_USER}@${NODE1} "echo 'password' | sudo -S systemctl stop strongswan-starter.service"
-sshpass -p "password" ssh ${NODE2_USER}@${NODE2} "echo 'password' | sudo -S systemctl stop strongswan-starter.service"
-
-# Wait a moment
-sleep 1
-
-# Change the config file
-sshpass -p "password" ssh ${NODE1_USER}@${NODE1} "echo 'password' | sudo -S sed -i 's/type=tunnel/type=transport/' /etc/ipsec.conf "
-sshpass -p "password" ssh ${NODE2_USER}@${NODE2} "echo 'password' | sudo -S sed -i 's/type=tunnel/type=transport/' /etc/ipsec.conf"
-
-# Wait a moment
-sleep 1
-
-# Bring up ipsec again
-sshpass -p "password" ssh ${NODE1_USER}@${NODE1} "echo 'password' | sudo -S systemctl start strongswan-starter.service" &
-sshpass -p "password" ssh ${NODE2_USER}@${NODE2} "echo 'password' | sudo -S systemctl start strongswan-starter.service" &
-
-# Wait a moment
-sleep 1
-
-# Start capture
-sshpass -p "password" ssh ${NODE1_USER}@${NODE1} "tshark -w transport_capture.pcap -i enp7s0 & sleep ${TIME} && killall tshark" &
-sshpass -p "password" ssh ${NODE2_USER}@${NODE2} "tshark -w transport_capture.pcap -i enp7s0 & sleep ${TIME} && killall tshark" &
-
-# Wait a moment
-sleep 1
-
-# Make traffic
-sshpass -p "password" ssh ${NODE1_USER}@${NODE1} "curl http://192.168.200.153" &
-
-# Wait
-sleep $(( $TIME + 2 ))
-
-# Get capture files
-sshpass -p "password" scp ${NODE1_USER}@${NODE1}:transport_capture.pcap node1_transport_capture.pcap
-sshpass -p "password" scp ${NODE2_USER}@${NODE2}:transport_capture.pcap node2_transport_capture.pcap
-
-# Stop ipsec again
-sshpass -p "password" ssh ${NODE1_USER}@${NODE1} "echo 'password' | sudo -S systemctl stop strongswan-starter.service"
-sshpass -p "password" ssh ${NODE2_USER}@${NODE2} "echo 'password' | sudo -S systemctl stop strongswan-starter.service"
-
-# Revert the change
-sshpass -p "password" ssh ${NODE1_USER}@${NODE1} "echo 'password' | sudo -S sed -i 's/type=transport/type=tunnel/' /etc/ipsec.conf"
-sshpass -p "password" ssh ${NODE2_USER}@${NODE2} "echo 'password' | sudo -S sed -i 's/type=transport/type=tunnel/' /etc/ipsec.conf"
-
-```
