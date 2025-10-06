@@ -396,101 +396,101 @@ configuration and typically faster connection setup.
 #pagebreak()
 = Transport Layer Security (TLS) + Secure Shell (SSH)
 
-== Assignment TLS Cipher Suite (Individual)
+
+== Assignment TLS Cipher Suite (Individual) + Analyze their components
 
 *Review Valid Combinations of TLS Cipher Suites mentioned in the slides*
 
-- #emph[Study the provided list of valid TLS
-  cipher suites]: \
+- *Assignment* #emph['Study the provided list of valid TLS
+  cipher suites']: \
 
-the cipher suites is a sqcunet of algorithm steips that
-is importtent to make sure that there can be
-sectyre commitation on the internet the first
-#emph[Key exchange between partners], is the
-method to prefrom a key exchange for both of the
-client and server, typically is it the
-Diffie-Hellman algorithm htat are bring used to
-preftrom this key exchange \
-#emph[Authentication (of the server)] is a
-method to ensure that the clienbt can make sure
-that the server that hte client is commitation
-with is a Valid server and where the clienet is
-cheking with puvlick certs thath the ciertifkted
-that the user gets is a valid and sigued bye
-oine of a known puvlick ciertifkted previer \
+#enum(
+	enum.item[
+		*Key Exchange*
+		\
+		In the 10 valid TLS cipher suites, three different key exchange
+		methods are used: #emph[RSA, DHE, ECDHE]. RSA is a method
+		where the two parties use public keys to encrypt the symmetric
+		key that both sides will use. DHE (Diffie-Hellman Ephemeral)
+		is a technique where the two parties use the Diffie-Hellman
+		algorithm to derive a shared secret key that will be used to
+		encrypt the messages they send to each other. ECDHE (Elliptic
+		Curve Diffie-Hellman Ephemeral) is another method to derive a
+		shared secret key, but this one uses elliptic curve
+		cryptography to achieve stronger security with smaller key
+		sizes. 
 
-#emph[Symmetrical de/encryption of message ] is
-the algorithm whre the server and client is
-usitn hte key that thay have hard to encrypt and
-decrypt the messages that hte partis are singing
-to eachheder
+	],
+	enum.item[
+		*Authentication*
+		\
 
-#emph[Block cipfer ]
-...
+		RSA is a public-key algorithms. That can be used for
+		authentication of the server, by signing secure digital
+		messages and certificates. The security of RSA relies on the
 
-#emph[Message Authentication and Integrit] 
-Message Authentication is a method to authenticate
-a msg to verivid that the message is from the
-person that turt the part that hte clinet is
-commitation with. Integrit is the mehoed hwere the
-paortis in a commitation channel can make sure
-that non of the message havs not beking tmeriuned
-with
+		ECDSA (Elliptic Curve Digital Signature Algorithm) works in a
+		similar to  the RSA way but is based on elliptic-curve
+		cryptography.
+	],
+	enum.item[
+		*Encryption Algorithm + Mode*
 
-- #emph[Analyze their components: key exchange method, authentication algorithm, encryption
-algorithm + mode, and MAC function.]: \
+		AES is a symmetric-key encryption algorithm and is the one
+		used most often in the valid TLS cipher suites from the
+		slides. AES is a block cipher that can use three key lengths:
+		128-bit, 192-bit, or 256-bit. The mode defines how the blocks
+		of data are processed. Common modes in TLS include CBC (Cipher
+		Block Chaining) and GCM (Galois/Counter Mode). CBC mode
+		encrypts each block based on the previous one, while GCM mode
+		provides both encryption and built-in integrity verification.
+
+	],
+
+enum.item[
+		*MAC Function*
+		\
+		Message Authentication is a method used to verify that a message
+		truly comes from the sender the client is communicating with.
+		Integrity ensures that the parties in a communication channel
+		can confirm that none of the messages have been tampered with
+		during transmission. In TLS, this is achieved using a MAC
+		function such as SHA256 or SHA384, which creates a unique
+		fingerprint for each message. If the message changes in any
+		way, the fingerprint no longer matches, and the receiver can
+		detect that the data has been altered.
+	]
+
+)
 
 *Design 3 “Impossible” Cipher Suites + Justify
 Each Invalid Combination *:
 
 #enum(
     enum.item[
-      *TLS_DH_DSA_WITH_AES_128_CBC_SHA:* 
-      \  
+	  *TLS_DH_DSA_WITH_AES_128_CBC_SHA:* 
+	  \  
+		This combination is invalid because the Diffie-Hellman (DH)
+		and the DSA are not compatible for key exchange and
+		authentication, since DSA is designed only to sign messages.
+		Therefore, there is no authentication in this cipher suite. 
 
     ],
 
     enum.item[
-      *TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256:* 
+      *TLS_AES_RSA_WITH_ECDH_GCM_SHA256:* 
       \  
-
-  This cipher suite looks valid at first, but it
-    is impossible by definition because AES-GCM is
-    an AEAD cipher (Authenticated Encryption with
-    Associated Data). AEAD algorithms already
-    include both encryption and integrity
-    protection internally. Therefore, using an
-    additional SHA256 message authentication code
-    (MAC) is redundant and invalid. TLS
-    specifications (RFC 5288, RFC 8446) clearly
-    define AEAD suites without separate MAC
-    algorithms. The correct version would be
-    TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256 where
-    the “SHA256” only refers to the handshake
-    hash, not the MAC. Adding it as a MAC breaks
-    the AEAD design and cannot exist in real TLS
-    implementations.
+		AES is a symmetric encryption algorithm and cannot be used for
+		key exchange, while ECDH is an asymmetric key exchange method.
+		Combining them in this order makes the suite structure
+		incorrect and therefore an impossible combination in TLS. 
     ],
-    enum.item[
-      * TLS_RSA_PSK_WITH_CHACHA20_POLY1305_SHA1 :* 
-      \  
 
-  This combination is also invalid because it
-    mixes RSA authentication with the PSK
-    (Pre-Shared Key) mechanism, which is
-    conceptually incompatible. In TLS, a cipher
-    suite can use either a certificate-based
-    method (like RSA or ECDSA) or a PSK-based
-    method, but not both together unless defined
-    in a hybrid form (e.g., DHE_PSK).
-    Additionally, CHACHA20_POLY1305 already
-    includes its own authentication (AEAD), making
-    the extra SHA1 redundant and insecure. This
-    combination was never defined in any TLS RFC
-    and would fail negotiation in any real
-    implementation.
+    //enum.item[
+    //  *TLS_AES_RSA_WITH_ECDH_GCM_SHA256:* 
+    //  \  
+    //]
 
-    ]
 )
 
 //- Review Valid Combinations of TLS Cipher Suites mentioned in the slides:
@@ -506,6 +506,11 @@ Each Invalid Combination *:
 //For each of your 3 impossible suites, write a short explanation (~100–150 words) covering:
 //• Why this combination does not work.
 //• Whether it is deprecated, insecure, or never defined in standards.
+
+#pagebreak()
+
+== Assignment  SSH MITM attack (Individual)
+
 
 #pagebreak()
 
