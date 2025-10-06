@@ -1,4 +1,3 @@
-
 import time
 import queue
 import threading
@@ -6,6 +5,7 @@ from pathlib import Path
 from flask import Flask, Response, send_file, render_template_string
 from watchdog.observers import Observer
 from watchdog.events import FileSystemEventHandler
+
 
 # === config ===
 PDF_PATH = Path("./main.pdf").resolve()  # change to your file

@@ -20,7 +20,7 @@
   date: date,
   heading-color: rgb("#03319c"),
   link-color: rgb("#008002"),
-  abstract: [this is the apprsikt]
+  abstract: [this is the firewall-friendly]
 )
 
 #outline(
@@ -392,6 +392,120 @@ configuration and typically faster connection setup.
 
 //#bibliography("bibliography.bib")
 //
+
+#pagebreak()
+= Transport Layer Security (TLS) + Secure Shell (SSH)
+
+== Assignment TLS Cipher Suite (Individual)
+
+*Review Valid Combinations of TLS Cipher Suites mentioned in the slides*
+
+- #emph[Study the provided list of valid TLS
+  cipher suites]: \
+
+the cipher suites is a sqcunet of algorithm steips that
+is importtent to make sure that there can be
+sectyre commitation on the internet the first
+#emph[Key exchange between partners], is the
+method to prefrom a key exchange for both of the
+client and server, typically is it the
+Diffie-Hellman algorithm htat are bring used to
+preftrom this key exchange \
+#emph[Authentication (of the server)] is a
+method to ensure that the clienbt can make sure
+that the server that hte client is commitation
+with is a Valid server and where the clienet is
+cheking with puvlick certs thath the ciertifkted
+that the user gets is a valid and sigued bye
+oine of a known puvlick ciertifkted previer \
+
+#emph[Symmetrical de/encryption of message ] is
+the algorithm whre the server and client is
+usitn hte key that thay have hard to encrypt and
+decrypt the messages that hte partis are singing
+to eachheder
+
+#emph[Block cipfer ]
+...
+
+#emph[Message Authentication and Integrit] 
+Message Authentication is a method to authenticate
+a msg to verivid that the message is from the
+person that turt the part that hte clinet is
+commitation with. Integrit is the mehoed hwere the
+paortis in a commitation channel can make sure
+that non of the message havs not beking tmeriuned
+with
+
+- #emph[Analyze their components: key exchange method, authentication algorithm, encryption
+algorithm + mode, and MAC function.]: \
+
+*Design 3 “Impossible” Cipher Suites + Justify
+Each Invalid Combination *:
+
+#enum(
+    enum.item[
+      *TLS_DH_DSA_WITH_AES_128_CBC_SHA:* 
+      \  
+
+    ],
+
+    enum.item[
+      *TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256:* 
+      \  
+
+  This cipher suite looks valid at first, but it
+    is impossible by definition because AES-GCM is
+    an AEAD cipher (Authenticated Encryption with
+    Associated Data). AEAD algorithms already
+    include both encryption and integrity
+    protection internally. Therefore, using an
+    additional SHA256 message authentication code
+    (MAC) is redundant and invalid. TLS
+    specifications (RFC 5288, RFC 8446) clearly
+    define AEAD suites without separate MAC
+    algorithms. The correct version would be
+    TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256 where
+    the “SHA256” only refers to the handshake
+    hash, not the MAC. Adding it as a MAC breaks
+    the AEAD design and cannot exist in real TLS
+    implementations.
+    ],
+    enum.item[
+      * TLS_RSA_PSK_WITH_CHACHA20_POLY1305_SHA1 :* 
+      \  
+
+  This combination is also invalid because it
+    mixes RSA authentication with the PSK
+    (Pre-Shared Key) mechanism, which is
+    conceptually incompatible. In TLS, a cipher
+    suite can use either a certificate-based
+    method (like RSA or ECDSA) or a PSK-based
+    method, but not both together unless defined
+    in a hybrid form (e.g., DHE_PSK).
+    Additionally, CHACHA20_POLY1305 already
+    includes its own authentication (AEAD), making
+    the extra SHA1 redundant and insecure. This
+    combination was never defined in any TLS RFC
+    and would fail negotiation in any real
+    implementation.
+
+    ]
+)
+
+//- Review Valid Combinations of TLS Cipher Suites mentioned in the slides:
+//• Study the provided list of valid TLS cipher suites.
+//• Analyze their components: key exchange method, authentication algorithm, encryption
+//algorithm + mode, and MAC function.
+//- Design 3 “Impossible” Cipher Suites:
+//• Propose three combinations of TLS cipher suite components that are invalid or impossible in
+//real-world TLS implementations.
+//• Use the following format for each:
+//TLS_<KeyExchange>_<Auth>_WITH_<Encryption>_<MAC>
+//- Justify Each Invalid Combination:
+//For each of your 3 impossible suites, write a short explanation (~100–150 words) covering:
+//• Why this combination does not work.
+//• Whether it is deprecated, insecure, or never defined in standards.
 
 #pagebreak()
 
