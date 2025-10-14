@@ -5,6 +5,7 @@
 #let date = datetime.today().display("[month repr:long] [day], [year]")
 #set enum(numbering: "a)")
 
+
 // Modify some arguments, which can be overwritten in the template call
 
 #page-args.insert("numbering", "1/1")
@@ -511,13 +512,199 @@ Each Invalid Combination *:
 
 == Assignment  SSH MITM attack (Individual)
 
+First, to perform the ARP spoofing attack, the
+Man-in-the-Middle attack has to be prepared too,
+so that Ettercap GUI can be used to set the two
+targets and then start the Man-in-the-Middle.
+
+
+#figure(
+  image("screen/thredLeache/screenshot_2025-10-06_18-28-01.png", width: 100%),
+  caption: [
+  Ettercap GUI starts the MITM
+  ],
+) <fig:ettercap_kali>
+
+
+
+
+#figure(
+  image("screen/thredLeache/screenshot_2025-10-06_18-16-44.png", width: 100%),
+  caption: [
+  Bob the client
+  ],
+) <fig:b_clinet>
+
+#figure(
+  image("screen/thredLeache/screenshot_2025-10-06_18-17-48.png", width: 100%),
+  caption: [
+    Alice the server
+  ],
+) <fig:a_server>
+
+As @fig:b_clinet and @fig:a_server show, the
+server and the client have changed the MAC address
+to the Kali machine’s MAC.
+
+\
+#pagebreak()
+
+Now the Man-in-the-Middle SSH can be performed
+with the following command:
+```bash
+$ ssh-mitm server --remote-host 192.168.122.212 
+```
+#figure(
+  image("screen/thredLeache/screenshot_2025-10-06_18-23-53.png", width: 100%),
+  caption: [
+    ssh-mitm
+  ],
+) <fig:a_serveaar>
+
+After the successful attack, 'ssh-mitm' showed
+some CVEs. I think these CVEs are vulnerabilities
+that can be exploited to make a more persistent
+attack. I also noticed that when I tried to
+connect to Alice (the server) again, I got an SSH
+warning saying "there's an eavesdropper, possibly
+a Man-in-the-Middle attack".
+
+Exploring the hijack, I saw that I could enter the
+SSH session and start typing and using the shell
+that Bob had just started. And the typing was also
+showed on the Bob machine.
+
+
+#pagebreak()
+
+= WiFi security
+
+== Assignment WiFi (Group)
+
+I did the group assignment, but when we wanted to
+deauth the beacon WiFi, there were too many access
+points, so we could not do the deauth from our
+Raspberry Pi.
+
+So I decided to do the assignment individually,
+without the WiFi Pineapple, since I have my own
+internet adapter that can do monitor mode.
+
+To set up for the assignment, I used a Raspberry
+Pi to create a hotspot. The commands I used were:
+
+```bash 
+$ sudo nmtui
+```
+
+After setting up the hotspot, I connected to the Raspberry Pi with my laptop and mobile phone to start traffic and start pinging each other.
+While the traffic was running, I started the ALFA
+adapter in monitor mode and started airodump-ng to
+capture the traffic, with the following commands:
+
+```bash 
+$ sudo ifconfig wlan1 down 
+$ sudo iwconfig wlan1 mode monitor 
+$ sudo ifconfig wlan1 up 
+# to check which channel the access point is on 
+$ sudo airodump-ng wlan1 -c <channel>
+```
+Now that the traffic was captured, the next step
+is to deauth the connected clients from the
+hotspot to capture the handshake. 
+
+```bash
+$ sudo airodump-ng --bssid <bssid> -c <channel> -w capture wlan1 
+$ sudo aireplay-ng --deauth 100 -a C6:60:AD:1A:5E:38  wlan1
+```
+
+#figure(
+  image("screen/forhLeach/screenshot_2025-10-14_11-05-51.png", width: 100%),
+  caption: [
+    Captured handshake
+  ],
+
+) <fig:cature>
+
+In @fig:cature, shows that the handshake is
+captured and now the next step is to try to crack
+the password with the tool John the Ripper. But
+before cracking the password, the capture file
+have to be converted to a hash file that John can
+accept.
+
+```bash
+$ wpapcap2john SanderHand-01.cap > SanderHandJohon.john
+$ john  SanderHandJohon.john
+```
+
+#figure(
+  image("screen/forhLeach/screenshot_2025-10-14_11-08-44.png", width: 100%),
+  caption: [
+    Captured handshake
+  ],
+
+) <fig:crak>
+
+
+As @fig:crak shows, the password is cracked and it
+took less then 1 second to crack the password,
+since the password is a weak password.
+
+#pagebreak()
+
+//4.4 Assignment WiFi Attack Names
+== Assignment Wi-Fi Attack Names
+
+*Man-in-the-middle attacks* \
+This is an attack where the attacker places
+themselves between two targets that are
+communicating. The attacker can then intercept,
+modify, block the communication, or simply just
+listen to it. The attacker can perform an *SSL
+hijack* attack that downgrades the HTTPS protocol
+to HTTP, allowing them to see all communication in
+plain text. For example, the attacker downgrades
+the HTTPS login page to HTTP, and now they can see
+the username and password being sent.
+\ *DNS spoofing* is a technique where the attacker has
+established a man-in-the-middle attack, and can
+then intercept DNS requests and respond with a
+malicious IP address. This allows them to redirect
+the user to a fake website — for instance, a fake
+Facebook login page. Even if there is an OTP
+(one-time password), the attacker can still design
+the website to look identical to the real Facebook
+page. When the user enters their username and
+password, the attacker can then perform an account
+takeover.
+
+#v(1em)
+\
+*Network injection — router / access point compromise*\
+An attacker may target a Wi-Fi router or access
+point by exploiting firmware vulnerabilities,
+weak/default credentials, or try to inject
+malicious code to execute unauthorized commands
+gain access. Once the attacker gains
+administrative access they can modify firmware
+logic or configuration so the device behaves
+according to the attacker’s wishes: capturing and
+logging all passing traffic, altering DNS
+responses, injecting malicious scripts into HTTP
+pages, or creating persistent backdoors for later
+access. 
+\ 
+*Deauthentication attacks* are a type of attack
+where the attacker sends deauthentication frames
+to the target device, forcing it to disconnect and
+after the disconnection, the target device will
+try to reconnect to the access point, with a WPA
+handshake. The attacker can then capture the
+handshake and try to crack the password.
 
 #pagebreak()
 
 == Appendix section
-//
+
 #show: appendices
-
-= Bash code Network Layer Security part one
-#label("bash-network1")
-
