@@ -581,14 +581,10 @@ showed on the Bob machine.
 
 == Assignment WiFi (Group)
 
-I did the group assignment, but when we wanted to
-deauth the beacon WiFi, there were too many access
-points, so we could not do the deauth from our
-Raspberry Pi.
-
-So I decided to do the assignment individually,
-without the WiFi Pineapple, since I have my own
-internet adapter that can do monitor mode.
+I did the group assignment, but when we wanted to deauth with WiFi
+pineapple. So I decided to do the assignment individually, without the
+WiFi Pineapple, since I have my own internet adapter that can do
+monitor mode, I can still do the assignment.
 
 To set up for the assignment, I used a Raspberry
 Pi to create a hotspot. The commands I used were:
@@ -597,7 +593,8 @@ Pi to create a hotspot. The commands I used were:
 $ sudo nmtui
 ```
 
-After setting up the hotspot, I connected to the Raspberry Pi with my laptop and mobile phone to start traffic and start pinging each other.
+After setting up the hotspot, I connected to the Raspberry Pi with my
+laptop and mobile phone to start traffic and start pinging each other.
 While the traffic was running, I started the ALFA
 adapter in monitor mode and started airodump-ng to
 capture the traffic, with the following commands:
@@ -609,9 +606,8 @@ $ sudo ifconfig wlan1 up
 # to check which channel the access point is on 
 $ sudo airodump-ng wlan1 -c <channel>
 ```
-Now that the traffic was captured, the next step
-is to deauth the connected clients from the
-hotspot to capture the handshake. 
+Now while the traffic was running, the next step is to deauth the
+connected clients from the hotspot to capture the handshake. 
 
 ```bash
 $ sudo airodump-ng --bssid <bssid> -c <channel> -w capture wlan1 
@@ -649,7 +645,10 @@ $ john  SanderHandJohon.john
 
 As @fig:crak shows, the password is cracked and it
 took less then 1 second to crack the password,
-since the password is a weak password.
+since the password is a weak password. This is why its important to
+always have a strong password on your WiFi access point, so that
+attackers not can easily crack the password and get access to your
+private network.
 
 #pagebreak()
 
@@ -658,7 +657,7 @@ since the password is a weak password.
 
 *Man-in-the-middle attacks* \
 This is an attack where the attacker places
-themselves between two targets that are
+themselves between two parties that are
 communicating. The attacker can then intercept,
 modify, block the communication, or simply just
 listen to it. The attacker can perform an *SSL
@@ -677,7 +676,9 @@ Facebook login page. Even if there is an OTP
 the website to look identical to the real Facebook
 page. When the user enters their username and
 password, the attacker can then perform an account
-takeover.
+takeover. This is why it is important to notice the when the bar that
+the URL is not correct and the URL bar is not saying: "Not secure", and
+there is a lock icon with a red cross on it.
 
 #v(1em)
 \
@@ -691,8 +692,7 @@ administrative access they can modify firmware
 logic or configuration so the device behaves
 according to the attacker’s wishes: capturing and
 logging all passing traffic, altering DNS
-responses, injecting malicious scripts into HTTP
-pages, or creating persistent backdoors for later
+responses or creating persistent backdoors for later
 access. 
 \ 
 *Deauthentication attacks* are a type of attack
@@ -701,7 +701,7 @@ to the target device, forcing it to disconnect and
 after the disconnection, the target device will
 try to reconnect to the access point, with a WPA
 handshake. The attacker can then capture the
-handshake and try to crack the password.
+handshake and try to crack the password offline.
 
 #pagebreak()
 
