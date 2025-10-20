@@ -642,7 +642,6 @@ $ john  SanderHandJohon.john
 
 ) <fig:crak>
 
-
 As @fig:crak shows, the password is cracked and it
 took less then 1 second to crack the password,
 since the password is a weak password. This is why its important to
@@ -705,6 +704,142 @@ handshake and try to crack the password offline.
 
 #pagebreak()
 
-== Appendix section
+
+
+
+= Cryptographic Key Management and Key Distribution + X.509 Certificates
+
+== Assignment: Trusted Root Certificates 
+
+
+The two trusted root certificates I have chosen are from GoDaddy and Microsoft.
+
+\
+GoDaddy:
+```json
+CN = Go Daddy Root Certificate Authority - G2
+O = GoDaddy.com, Inc.
+L = Scottsdale
+S = Arizona
+C = US
+```
+\
+Microsoft:
+```json
+CN = Microsoft RSA Root Certificate Authority 2017
+O = Microsoft Corporation
+C = US
+```
+\
+
+#enum(
+ enum.item()[
+		*Who (which entity) has signed this certificate?*
+		\
+		Both the GoDaddy and Microsoft root certificates are
+		self-signed. This means that these are root certificates and
+		therefore sit at the top of the hierarchy. They are the only
+		ones that have signed their own certificates. 
+	],
+ enum.item()[
+		*Why is it trusted?* \
+		The two certificates are trusted because they are
+		pre-installed in the operating system, allowing the OS or the
+		browser recognize and trust these certificates automatically. 
+	]
+)
+
+#pagebreak()
+
+== Assignment: What's My Chain Cert?
+
+I deciested to pick my own domain: \
+* softrunner.dk *
+
+
+#enum(
+	enum.item()[
+
+	*How many certificates do you see in the chain?* \
+		There is four certificates in the chain
+	],
+
+	enum.item()[
+
+#enum(
+		
+  enum.item()[
+	*For each certificate* \
+    *Server (End-Entity) Certificate*  \
+    *Subject:* `CN=softrunner.dk`  \
+    *Issuer:* `C=US, O=Google Trust Services, CN=WR1`  \
+    *Role:* *Server Certificate*  \
+    - This is the website certificate issued to `softrunner.dk`.  \
+  ],
+
+  enum.item[
+    *Intermediate Certificate*  \
+    *Subject:* `C=US, O=Google Trust Services, CN=WR1`  \
+    *Issuer:* `C=US, O=Google Trust Services LLC, CN=GTS Root R1`  \
+    *Role:* *Intermediate CA*  \
+  ],
+
+  enum.item[
+    *Root CA Certificate*  \
+    *Subject:* `C=US, O=Google Trust Services LLC, CN=GTS Root R1`  \
+    *Issuer:* `C=BE, O=GlobalSign nv-sa, OU=Root CA, CN=GlobalSign Root CA`  \
+    *Role:* *Root CA (Sub-root)*  \
+  ],
+
+  enum.item[
+    *Global Root Certificate*  \
+    *Subject:* `C=BE, O=GlobalSign nv-sa, OU=Root CA, CN=GlobalSign Root CA`  \
+    *Issuer:* *Self-signed* (same as Subject)  \
+    *Role:* *Trusted Root CA*  \
+  ],
+)
+],
+	enum.item()[
+		*Chain format*: \ 
+	softrunner.dk (CN=softrunner.dk) 
+	→ Google Trust Service (CN=WR1) 
+	→ GTS Root R1 (CN=GTS Root R1) 
+	→ GlobalSign Root CA (CN=GlobalSign Root CA)
+
+	],
+	enum.item()[
+		*Which certificate in the chain expires first? And why are
+		end-entity certificates usually valid
+		for a much shorter period (e.g., 90 days)? * \
+
+		The certificate will expire first is the server (end-entity)
+		it will expire on the *Jan 16 01:34:01 2026 GMT*. The
+		end-entity is usually valid for a much shorter period because
+		shorter lifetimes reduce security risks in case the private
+		key is compromised or misused. \
+	],
+
+
+	enum.item()[
+		*Compare the signature algorithms (e.g., SHA256WithRSAEncryption).* \
+		Most of the certificates in the chain use the
+		*sha256WithRSAEncryption* algorithm, except for the
+		root certificate from GlobalSign, that uses
+		*sha1WithRSAEncryption*. It might be because the root is
+			signed in the *Sep  1 12:00:00 1998 GMT*, so maybe at its
+				was common to use SHA-1 back then.
+	 ]
+)
+
+
+#pagebreak()
+
+== Assignment: Explore Certificate Transparency (CT) Logs
+
+
+#pagebreak()
+
+
+= Appendix section
 
 #show: appendices
