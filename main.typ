@@ -836,29 +836,67 @@ I deciested to pick my own domain: \
 
 == Assignment: Explore Certificate Transparency (CT) Logs
 
-*Which CA issued its current certificate? * \
-\
+I decided to explore two domains: aau.dk and mitid.dk but i used the
+site: https://crt.sh/ and the https://platform.censys.io/:
 
-*
-aau.dk \
-let’s Encrypt \
-R13 \
-couting: 40
-* \
------
-\
-*
-mitid.dk \
-let’s Encrypt \
-R13 \
-couting: 23 
-*
 
-\
+//*
+//Domain: aau.dk \
+//CA issued: let’s Encrypt \
+//couting only the common name with no subdomains: and the where 40
+//yes there are a kind of duplicate that are issued the same day but one
+//of thm is a Leaf certificate and the other is a Precertificate. \
+//R13 \
+//the issued date is: 2025-09-18 \
+//* \
 
-*Are there expired or duplicate certificates?:* \
-yes, there are some expired certificates, and
-there a some duplicate certificates too.
+*Domain*: aau.dk
+*CA Issued*: Let’s Encrypt  \
+*Number of certificates*: Counting only the Common Name (CN) “aau.dk”
+and excluding subdomains, there were around 40 certificates. \
+
+*Duplicates or expired certificates*: Let’s Encrypt issues both a leaf
+certificate and a precertificate. \
+
+*Most recent certificate logged*: The most recent certificate was issued
+on 2025-09-18. \
+
+————————–
+
+*Domain*: mitid.dk \
+*CA Issued*: Let’s Encrypt \
+*Number of certificates*: Counting only the Common Name (CN)
+“mitid.dk” and excluding subdomains, there were around 23
+certificates. \
+
+*Duplicates or expired certificates*: Let’s Encrypt issues both a leaf
+certificate and a precertificate, so some entries appear as
+duplicates. \
+
+*Most recent certificate logged*: The most recent certificate was
+issued on 2025-09-03. \
+
+
+#v(1em)
+
+*Why are CT (Certificate Transparency) logs important?*
+CT logs are important because website and peple can monitor and see
+the history of certificates issued for their domains. This helps
+detect malicious or misissued certificates, and can enhance the
+security by making the certificate transparent. \
+#v(1em)
+*How could CT logs help detect mis-issued or rogue certificates?* \
+
+*Who maintains these logs, and how can they be trusted themselves?* \
+CT logs are maintained by independent organizations (for example,
+Google, Cloudflare, DigiCert, Let’s Encrypt, and others). 
+
+*Can you find a phishing domain which uses a certificate? * \
+- *Find some information about that certificate such as validity
+period etc. Do you see any differences between this certificate and a
+certificate from a valid domain (like aau.dk etc.)* \
+ i dont have more search on the https://platform.censys.io/ so i can
+ preform thos task 
 
 
 #pagebreak()
