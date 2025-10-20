@@ -836,6 +836,30 @@ I deciested to pick my own domain: \
 
 == Assignment: Explore Certificate Transparency (CT) Logs
 
+*Which CA issued its current certificate? * \
+\
+
+*
+aau.dk \
+let’s Encrypt \
+R13 \
+couting: 40
+* \
+-----
+\
+*
+mitid.dk \
+let’s Encrypt \
+R13 \
+couting: 23 
+*
+
+\
+
+*Are there expired or duplicate certificates?:* \
+yes, there are some expired certificates, and
+there a some duplicate certificates too.
+
 
 #pagebreak()
 
