@@ -31,38 +31,38 @@
 
 #pagebreak()
 
-== Introduction for typst
-
-$
-  sum_(k=1)^n k = (n(n+1)) / 2
-$<equation>
-
-$
-  exp(x) = sum_(n=0)^oo (x^n) / n!
-$
-
-As we can see, it is not numbered.
-
-== Theorems
-
-The template uses #link("https://typst.app/universe/package/great-theorems/")[`great-theorems`] for theorems. Here is an example of a theorem:
-
-#theorem(title: "Example Theorem")[
-  This is an example theorem.
-]<th:example>
-#proof[
-  This is the proof of the example theorem.
-]
-
-We also provide `definition`, `lemma`, `remark`, `example`, and `question`s among others. Here is an example of a definition:
-
-#definition(title: "Example Definition")[
-  This is an example definition.
-]
-
-#question(title: "Custom mathblock?")[
-  How do you define a custom mathblock?
-]
+//== Introduction for typst
+//
+//$
+//  sum_(k=1)^n k = (n(n+1)) / 2
+//$<equation>
+//
+//$
+//  exp(x) = sum_(n=0)^oo (x^n) / n!
+//$
+//
+//As we can see, it is not numbered.
+//
+//== Theorems
+//
+//The template uses #link("https://typst.app/universe/package/great-theorems/")[`great-theorems`] for theorems. Here is an example of a theorem:
+//
+//#theorem(title: "Example Theorem")[
+//  This is an example theorem.
+//]<th:example>
+//#proof[
+//  This is the proof of the example theorem.
+//]
+//
+//We also provide `definition`, `lemma`, `remark`, `example`, and `question`s among others. Here is an example of a definition:
+//
+//#definition(title: "Example Definition")[
+//  This is an example definition.
+//]
+//
+//#question(title: "Custom mathblock?")[
+//  How do you define a custom mathblock?
+//]
 
 #let answer = my-mathblock(
   blocktitle: "Answer",
@@ -895,8 +895,26 @@ Google, Cloudflare, DigiCert, Let’s Encrypt, and others).
 - *Find some information about that certificate such as validity
 period etc. Do you see any differences between this certificate and a
 certificate from a valid domain (like aau.dk etc.)* \
- i dont have more search on the https://platform.censys.io/ so i can
- preform thos task 
+I don't have more searches on the https://platform.censys.io/ so i can't preform this task
+
+
+#pagebreak()
+
+
+
+= Digital Signature & Bitcoin
+
+
+== RSA challenges for signing 
+
+* Objective: *
+Identify and explain at least three specific
+challenges of RSA that DSA aimed to address
+\
+
+One of the changens that das tryes to address
+
+
 
 
 #pagebreak()
