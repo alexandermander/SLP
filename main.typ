@@ -1,4 +1,5 @@
 #import "@preview/clean-math-paper:0.2.4": *
+#import "@preview/codedis:0.2.0": code
 
 #set text(hyphenate: true)
 
@@ -907,19 +908,214 @@ I don't have more searches on the https://platform.censys.io/ so i can't preform
 
 == RSA challenges for signing 
 
-* Objective: *
+* Objective: * \
 Identify and explain at least three specific
 challenges of RSA that DSA aimed to address
 \
 
-One of the changens that das tryes to address
+#enum(
+	enum.item[
+		DSA is designed specifically for digital signatures, to
+		validate where the RSA algorithm can encrypt, sign, and
+		perform key exchange. This means that DSA has been implemented
+		so when creating a signature, four components are used: the
+		message, the private key, a random value, and the hash
+		function. This will create a unique signature for this
+		message. To verify the signature, the client that receives the
+		message can use the public key and the message to verify
+		whether the signature is valid or not. This will return true
+		or false.
+	],
+	enum.item[
+		DSA will always produce different signatures even if the same
+		message is signed multiple times with the same private key.
+		this occurs because DSA uses a random value (nonce) during the 
+		signing process, ensuring that each signature is unique. 
+	],
+	enum.item[ 
+		DSA dont use the encryption like RSA does, this means that DSA is 
+		With RSA, the same algorithm is used for encryption and
+		signing. 
+	]
+)
+
+== Digital Signatures in practice
+
+* Objective: * \
+The objective of this assignment is to help you understand how
+different digital signature algorithms work by generating and
+comparing signatures for the same text using Python.
+\
+To find the python implementation see the appendix section. \
+to run the code, use the following command in the terminal:
+```bash 
+$ python3 createsigns.py "Your message here"
+```
+\
+
+#figure(
+  image("screen/m6sig/genartionsig.png", width: 100%),
+  caption: [
+  The three signatures generated using RSA, DSA, and ECDSA ],
+) <fig:pyout>
+
+//As seen in @fig:pyout, the three different signatures generated RSA,
+//DSA, and ECDSA. Notice that each signature has a different length and
+//and different structures, this is because of the different algorithms.
+//But one insteresting part is that when running the script with the
+//same input message, the signatures generated with DSA and ECDSA will
+//not be the same each time, this is because these two algorithms use a 
+//random value when generating the signature, making each signature.
+//Where on the other hand, the RSA signature will always be the same for
+//the same input message, if the key stays the same.
+//antoher interesting part is the time it takes to generate the signatures,
+//where RSA is around 4 times slower than DSA, 
+//
+//RSA is slower because it uses...
+//
+//
+//and the signature length
+//is also much longer than the other two algorithms. \
+//If we look on the the length of the signatures: ECDSA has the shortest
+//where the length RSA is the longest. 
 
 
+
+As seen in @fig:pyout, three different signatures were generated using
+RSA, DSA, and ECDSA. Notice that each signature has a different length
+and structure, this is due to the distinct mathematical algorithms.
+An interesting observation is that when running the script with the
+same input message, the signatures produced by DSA and ECDSA change
+every time. This happens because both algorithms include a random
+value (nonce) during the signing process, ensuring that each signature
+is unique even when the same message and key are used.
+In contrast, the RSA signature remains identical for the same input
+message, as it does not rely on randomness once the key pair is fixed.
+The performance of RSA algorithm takes noticeably longer, around four
+times slower than DSA. This is because it involves more computationally
+intensive operations with large modular exponentiations. DSA and
+especially ECDSA are designed to be more efficient, with ECDSA
+achieving by using much smaller key sizes.
+
+Regarding signature length, RSA produces the longest signatures, while
+ECDSA signatures are the shortest. This is because elliptic curve
+cryptography provides equivalent security with smaller mathematical
+parameters
+
+
+== Dual Signatures
+
+-- Task 2: *Secure Payment Design*:
+
+Creation of dual signatures: The generation and implementation of the
+SET protocol for dual signatures is done by first generating two
+hashes — one for the payment information and one for the order
+information. These hashes are then saved so they can be verified
+later. After generating the two hashes, the generation of the POMD
+hash can be done by combining the two other hashes See the code below:
+
+//python code 
+
+```python 
+PI = b"Pay 100 DKK to MerchantX"
+OI = b"Order #2456: 2 items total 100 DKK"
+
+with open('PI.txt', 'wb') as fp:
+    fp.write(PI)
+with open('OI.txt', 'wb') as fp:
+    fp.write(OI)
+
+PIMD = SHA256.new(PI)
+OIMD = SHA256.new(OI)
+
+with open('PIMD.bin', 'wb') as fp:
+    fp.write(PIMD.digest())
+with open('OIMD.bin', 'wb') as fp:
+    fp.write(OIMD.digest())
+
+POMD = SHA256.new(PIMD.digest() + OIMD.digest())
+```
+
+Once this hash is created, the RSA key can be generated. The values
+are stored in two files: key.pem as the private key and pubkey.pem as
+the public key. After the key has been generated, we can use the
+private key to sign the POMD.
+
+```python
+sig = pss.new(key).sign(POMD)
+
+with open('sig.bin', 'wb') as fp:
+    fp.write(sig)
+```
+Os this means that the key is generated first based on the
+order and payment information that have been hashed, and then the two
+digit are combined and hashed again. This final hash is the POMD, and
+this POMD is then signed. The resulting signature is saved in the file
+sig.bin.
+
+#pagebreak()
+
+* Verification of dual signatures: * \
+To verify the dual signature, the
+process starts by loading the public key from the pubkey.pem file. If
+we want to verify the signature from the Merchant perspective, we need
+two hashes: let’s say we have OI and PIMD. We hash the OI to generate
+the OIMD and then combine this with the PIMD to generate the POMD.
+After generating the POMD, we load the signature from the sig.bin
+file. Then, we use the public key to verify the signature against the
+POMD.
+
+```python
+with open('OI.txt', 'rb') as fp:
+    OI = fp.read()
+with open('PIMD.bin', 'rb') as fp:
+    PIMD = fp.read()
+OIMD = SHA256.new(OI)
+POMD = SHA256.new(PIMD + OIMD.digest())
+try:
+    verifier.verify(POMD, sig)
+    print("Merchant verified signature")
+except (ValueError):
+    print("Merchant cannot verify signature")
+```
+To verify the signature from the Bank perspective, the process is
+similar. Here we already have the OIMD, and we can generate the PIMD
+by hashing the payment information. Then, we combine the OIMD and PIMD
+to obtain the POMD. After generating the POMD, we load the signature
+and verify it using the public key.
+
+#v(1em)
+*Screenshots of generated signatures and verification results:* \
+
+* Generation: * \
+
+#figure(
+  image("morduls/setproto/gen.png", width: 100%),
+  caption: [
+   The generated dual signature
+  ],
+) <fig:gen>
+
+
+* Verification: * \
+
+#figure(
+  image("morduls/setproto/veri.png", width: 80%),
+  caption: [
+   The verification of the dual signature
+  ],
+) <fig:veri>
 
 
 #pagebreak()
 
-
 = Appendix section
 
-#show: appendices
+== Digital Signatures in practice in: 6.2
+
+#let pythonFile = read("/morduls/m6sig.py")
+#code(pythonFile, lang: "python")
+
+
+
+
