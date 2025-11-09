@@ -959,28 +959,6 @@ $ python3 createsigns.py "Your message here"
   The three signatures generated using RSA, DSA, and ECDSA ],
 ) <fig:pyout>
 
-//As seen in @fig:pyout, the three different signatures generated RSA,
-//DSA, and ECDSA. Notice that each signature has a different length and
-//and different structures, this is because of the different algorithms.
-//But one insteresting part is that when running the script with the
-//same input message, the signatures generated with DSA and ECDSA will
-//not be the same each time, this is because these two algorithms use a 
-//random value when generating the signature, making each signature.
-//Where on the other hand, the RSA signature will always be the same for
-//the same input message, if the key stays the same.
-//antoher interesting part is the time it takes to generate the signatures,
-//where RSA is around 4 times slower than DSA, 
-//
-//RSA is slower because it uses...
-//
-//
-//and the signature length
-//is also much longer than the other two algorithms. \
-//If we look on the the length of the signatures: ECDSA has the shortest
-//where the length RSA is the longest. 
-
-
-
 As seen in @fig:pyout, three different signatures were generated using
 RSA, DSA, and ECDSA. Notice that each signature has a different length
 and structure, this is due to the distinct mathematical algorithms.
@@ -1109,13 +1087,327 @@ and verify it using the public key.
 
 #pagebreak()
 
+
+= Electoinlick Mail seacrt
+
+== The State of Email Security 
+
+*DNSSEC adoption in the real world: Why is DNSSEC not universal yet, and what are the main
+deployment barriers?* \
+
+The DNSSEC protocol is used in the real world, but not all sites have adopted it. The protocol is
+complex, and since it is built on top of the old DNS protocol, it becomes even more complicated.
+Many people complain that DNSSEC is too complex to set up and get working properly.
+The main deployment barriers are the technical complexity, the need for careful key management, and
+the risk of misconfiguration that can take a domain offline. Many organizations also find it
+difficult to maintain because DNSSEC requires extra setup and regular updates to keep the keys
+valid. \
+
+#v(2em)
+
+* How Proton Mail work, is it PGP or S/MIME? Why?* \
+
+Proton is usning PGP (priti good pricy) the diginso of the PGP is that its ueses asymmetric
+encryption that uses pupclik and prive key as the why to preicert the email being sned, htis is only
+being done for hte userss that are suing a proton mail, event alle the messinges that are sored in
+the server of proin is encruede so this is only the user and tha can see the emils being resived and
+resnd. this conset is now as zero-access encryption. \
+
+*Tuta vs Proton Mail*\
+As we know, Proton Mail uses PGP, but the other service, Tuta, does not adopt the PGP design. This
+is because PGP is not considered quantum-resistant. Tuta instead uses the Kyber-1024 algorithm,
+which is a quantum-resistant encryption algorithm. They clearly state that they are not using the
+PGP design since it cannot be easily adapted to quantum protection. On the other hand, the pricing
+of the two services is similar — both offer a free plan, with around 1 GB of storage, and paid plans
+costing about 3 dollars for around 15–20 GB of storage
+
+
+== Verifying the Email Security Stack of mitid.dk
+
+
+*Step 1) Verify DNSSEC:* \
+
+To retrieve the *RRSIG*, the bash command shown below will get this signature and the result:
+
+```bash
+$ dig @1.1.1.1 +dnssec mitid.dk
+mitid.dk. 20 IN RRSIG A 13 2 20 20251105204733 20251102194733 65041 mitid.dk. /L0NsAx6Un/hM5nfB9hWVZr4EJ5HTRl/R+YQ6uPUWyRRG+OsiDTOBdLV 1dVX1mvSo/...
+
+```
+#figure(
+  image("screen/m7lectre/screenshot_2025-11-03_17-39-05.png"),
+  caption: [
+  A capture of a dig command 
+  ],
+
+) <fig:digcommand>
+
+As seen in @fig:digcommand , this is the response showing both the A record and its corresponding RRSIG.
+
+The (RRSIG A) is the signature for the *A record*, which means the IPv4 record. (13) is the
+algorithm used for this signature — in this case, it’s using *ECDSA Curve P-256 with SHA-256* since
+its number is 13. (2) is the number of labels in the record name. (20) is the TTL. The next two
+numbers are the timestamps — the first is the *expiration date* (2025-11-05 20:47:33), and the
+second is the *signing (inception) date*. (65014) is the *Key Tag* that should verify the signature.
+After mitid.dk is the *digital signature* that has been hashed using SHA-256. This key is encoded
+with *Base64*.
+
+#v(2em)
+
+The next command is to find the *DNSKEY*:
+
+```bash
+$ dig @1.1.1.1 +dnssec DNSKEY mitid.dk | grep mitid.dk | cut -c1-100
+mitid.dk.   5534    IN      DNSKEY  256 3 13 pRrLFT7evmDj1V2n/....
+mitid.dk.   5534    IN      DNSKEY  256 3 13 8WioCwcmhPA2YSyt/....
+mitid.dk.   5534    IN      DNSKEY  257 3 13 Zp1SZuFNXD53OU7K/....
+mitid.dk.   5534    IN      DNSKEY  257 3 13 8gcnnjVQPkfmZxU+/....
+mitid.dk.   5534    IN      RRSIG   DNSKEY 13 2 7200 20251106084733 20251103074733 3949 mitid.dk. axtWTuBQENcW...
+mitid.dk.   5534    IN      RRSIG   DNSKEY 13 2 7200 20251106084733 20251103074733 44941 mitid.dk. JxDw7V91O4R...
+```
+
+There are four DNSKEYs — two of them are *ZSKs* and the other two are *KSKs*. The *ZSK (Zone Signing
+Key)* is used for signing records like MX, A, etc. The *KSK (Key Signing Key)* is used for signing
+the DNSKEY RRset itself. The flag value 256 identifies a ZSK, and 257 identifies a KSK. The 3 is the
+protocol number for DNSKEY. The 13 is again the algorithm *ECDSA Curve P-256 with SHA-256*. Next
+comes the *public key*, which is used to verify the signatures in the RRSIG. Here is where the *Key
+Tag* comes into play, since this value is used to locate the signer. The RRSIG DNSKEY is a different
+signature — it signs the *DNSKEY RRset*, allowing the DNSKEYs themselves to be verified.
+
+The next part is understanding the *DS record*:
+
+```bash
+$ dig @1.1.1.1 +dnssec DS mitid.dk 
+mitid.dk.    6060    IN      DS      44941 13 2 6DA9443050311FF6DE97629... 
+mitid.dk.    6060    IN      RRSIG   DS 13 2 7200 20251129104202 20251101091202 50934 dk. qjmeMFyQSUdjY0Y0fk...
+```
+The *DS record* is the record stored in the *parent zone (root or .dk)* that refers to the child’s DNSKEY.
+Here, 13 is again the algorithm *ECDSA Curve P-256 with SHA-256*.
+The DS record contains a *hash (digest)* of the child zone’s *public key (DNSKEY)*, which is used to validate that key.
+There is also an *RRSIG for the DS*, which is the signature from the parent zone proving that the DS record itself is authentic.
+
+
+#enum( 
+  enum.item()[
+    *Which one represents the digital signature?* \
+    the RSSIG is the one that represents that digital signrueture
+  ],
+  enum.item()[
+    *which one stores the public key?* \
+    The DNSKEY is the one that sores the pubkey key
+  ],
+
+  enum.item()[
+    *What are the ‘flags’ in the header? Explain each of the flags* \
+
+  ```bash
+  $ dig @1.1.1.1 +dnssec mitid.dk
+  ;; flags: qr rd ra ad; QUERY: 1, ANSWER: 3, AUTHORITY: 0, ADDITIONAL: 1
+  ```
+    *The flags explained:* \
+    *qr* – this indicates whether it’s a query or a response. If the bit is 0, it’s a query; if it’s 1, it’s a response.  
+    *rd* – Recursion Desired, meaning that recursion is allowed.  
+    *ra* – Recursion Available, showing that the server supports recursive queries.  
+    *ad* – Authenticated Data, meaning the DNSSEC signatures have been validated successfully.
+  ],
+
+)
+
+#pagebreak()
+
+*How can you tell that DNSSEC validation succeeds for mitid.dk?*
+
+to valute the mitid.dk i can use the delv command to validate the tool chain
+
+```bash
+$ delv @1.1.1.1 +dnssec +rtrace +vtrace  mitid.dk 
+;; fetch: mitid.dk/A
+;; validating mitid.dk/A: starting
+;; validating mitid.dk/A: attempting positive response validation
+;; fetch: mitid.dk/DNSKEY
+;; validating mitid.dk/DNSKEY: starting
+;; validating mitid.dk/DNSKEY: attempting positive response validation
+;; fetch: mitid.dk/DS
+;; validating mitid.dk/DS: starting
+;; validating mitid.dk/DS: attempting positive response validation
+;; fetch: dk/DNSKEY
+;; validating dk/DNSKEY: starting
+;; validating dk/DNSKEY: attempting positive response validation
+;; fetch: dk/DS
+;; validating dk/DS: starting
+;; validating dk/DS: attempting positive response validation
+;; fetch: ./DNSKEY
+;; validating ./DNSKEY: starting
+;; validating ./DNSKEY: attempting positive response validation
+;; validating ./DNSKEY: verify rdataset (keyid=20326): success
+;; validating ./DNSKEY: marking as secure (DS)
+;; validating dk/DS: in fetch_callback_dnskey
+;; validating dk/DS: keyset with trust secure
+;; validating dk/DS: resuming validate
+;; validating dk/DS: verify rdataset (keyid=61809): success
+;; validating dk/DS: marking as secure, noqname proof not needed
+;; validating dk/DNSKEY: in fetch_callback_ds
+;; validating dk/DNSKEY: dsset with trust secure
+;; validating dk/DNSKEY: verify rdataset (keyid=20109): success
+;; validating dk/DNSKEY: marking as secure (DS)
+;; validating mitid.dk/DS: in fetch_callback_dnskey
+;; validating mitid.dk/DS: keyset with trust secure
+;; validating mitid.dk/DS: resuming validate
+;; validating mitid.dk/DS: verify rdataset (keyid=50934): success
+;; validating mitid.dk/DS: marking as secure, noqname proof not needed
+;; validating mitid.dk/DNSKEY: in fetch_callback_ds
+;; validating mitid.dk/DNSKEY: dsset with trust secure
+;; validating mitid.dk/DNSKEY: verify rdataset (keyid=44941): success
+;; validating mitid.dk/DNSKEY: marking as secure (DS)
+;; validating mitid.dk/A: in fetch_callback_dnskey
+;; validating mitid.dk/A: keyset with trust secure
+;; validating mitid.dk/A: resuming validate
+;; validating mitid.dk/A: verify rdataset (keyid=65041): success
+;; validating mitid.dk/A: marking as secure, noqname proof not needed
+; fully validated
+mitid.dk.               20      IN      A       95.100.155.16
+mitid.dk.               20      IN      A       95.100.155.160
+mitid.dk.               20      IN      RRSIG   A 13 2 20 20251106084733 20251103074733 65041 mitid.dk. sDcAOtXXEjRQFcIH77X6Bv+fGP/SzYBgErRzBGxav32EKX6KNeDm5Du/ WUh+3jZwu/dzvzn/KAkwmaKIcZy2Uw==
+```
+
+As we can see, the chain of validation is shown above. It first starts with the A record for
+mitid.dk, which is then validated. After that, the DNSKEY for mitid.dk is fetched and validated,
+followed by the DS record for mitid.dk. Next, the DNSKEY for the parent zone (dk) is validated, and
+then the DS record for the parent zone, and finally the DNSKEY for the root zone (.).
+Observe how the order is resolved step by step — from the root, to the .dk zone, and finally to
+mitid.dk. This shows the complete validation chain moving from the top (root) all the way down to
+the A record. At the end, the message fully validated is shown. This means that all keys have been successfully
+verified — forming a complete, trusted chain of validation from the root zone down to the domain
+(mitid.dk), confirming that the DNSSEC validation succeeded
+
+
+#v(2em)
+
+*Step 2) Investigate SPF, DKIM, and DMARC * \
+
+to request for the SPF the command as show blow can retireve the SPF flag: 
+```bash
+$ dig @1.1.1.1 txt mitid.dkA
+mitid.dk.               523     IN      TXT     "zf040yhy3q4ccv3vk9kv1fbwxb9wr1qp"
+mitid.dk.               523     IN      TXT     "v=spf1 include:_spf.sitnet.dk
+include:spf.protection.outlook.com ip4:91.102.26.64/27 ip4:185.208.80.30 ip4:185.208.80.157 ip4:91.102.30.2 ip4:91.102.30.3 ip4:91.102.30.130 ip4:91.102.30.131 ip4:91.102.30.140 ip4:188.64.157.0/29 -all"
+```
+As shown above, this is a list of all the IP addresses that can send email from the mitid.dk domain.
+There is also spf.protection.outlook.com, which is allowed to send email from this domain, and
+spf.sitnet.dk (this belongs to Statens IT, the State IT department of Denmark). I think this acts as
+a kind of backup - if all the other IPs are down, then MitID can still send emails through this
+domain or via spf.protection.outlook.com or spf.sitnet.dk
+
+The "-all" means that all other hosts are not allowed to send email using the `@mitid.dk` domain.
+
+*DKIM*
+
+```bash
+$ dig TXT default._domainkey.mitid.dk
+```
+
+this is no information on the flag 
+
+
+*DMARC*
+
+```bash
+$ dig TXT _dmarc.mitid.dk
+
+;; ANSWER SECTION:
+_dmarc.mitid.dk. 600 IN TXT "v=DMARC1; p=reject; sp=reject; rua=mailto:nets-abuse@spam.riskiq.net;"
+```
+
+DMARC1 is version 1, where the p and sp tags mean that if the SPF check fails, the email will be rejected completely.
+This also applies to subdomains. The rua tag defines the email address where DMARC reports will be sent for analysis.
+
+*Are mitid.dk’s emails protected from spoofing? Why or why not?* \
+
+The short answer is yes, MitID is protected from spoofing.
+This is because the SPF record only allows specific IP addresses to send emails on behalf of mitid.dk,
+and the strict p=reject and sp=reject flags ensure that any email failing SPF or DKIM checks will be rejected.
+
+#v(3em)
+
+*Step 3) Check for DANE / TLSA* \
+
+
+The posteo.de have the DANE TLSA:
+
+```bash
+$ dig TLSA _25._tcp.posteo.de
+```
+
+#figure(
+  image("./screen/m7lectre/screenshot_2025-11-03_19-55-10.png"),
+  caption: [
+  The screenshots of the dig commned
+  ],
+
+) <fig:DANE>
+
+The reason for the screenshot is that it shows five answers, each with a fingerprint that is the
+hash of the public key.
+
+//To retireve the RRSIG the bash command as shown below will get this signrueture and the reslurt:
+//```bash
+//$ dig @1.1.1.1 +dnssec mitid.dk
+//mitid.dk. 20 IN RRSIG A 13 2 20 20251105204733 20251102194733 65041 mitid.dk. /L0NsAx6Un/hM5nfB9hWVZr4EJ5HTRl/R+YQ6uPUWyRRG+OsiDTOBdLV 1dVX1mvSo/EIrgpgtwa+O9s7MEdb9g==
+//```
+//The (RRSIG A) is is the sigruter for hte A recoed this means the ipv4 reaceosd (13) is the
+//algrumerueim used for this sigrunre in htis caste is it using the "ECDSA Curve P-256 with SHA-256"
+//since its number 13. (2) is hte number of A Reackous  (20) is the TTL 
+//the the next to nuberis thes is the expriesed date 2025 11. nov. 05. at
+//20:47:33 and the next is the singing date. the (65014) is a Key Tag that shuold verfiry the
+//singruete that is given a. efter the midtid.dk is the digital sigrunure that is being hashed with
+//SHA-256 this ikey is is enocdede with base64 \
+//
+//#v(2em)
+//
+//The next command is to find hte DNSKEY
+//
+//```bash
+//$ dig @1.1.1.1 +dnssec DNSKEY mitid.dk | grep mitid.dk | cut -c1-100
+//mitid.dk.   5534    IN      DNSKEY  256 3 13 pRrLFT7evmDj1V2n/ZVJuOmj9+C+jZlDgNuAO25FR706D1otQDi7XPSv CdfT7K9L...
+//mitid.dk.   5534    IN      DNSKEY  256 3 13 8WioCwcmhPA2YSytNkF6xzYaoXDuQdIpyGhe9/cPToV2ygVuvAWyFrhP HaKnkM9k...
+//mitid.dk.   5534    IN      DNSKEY  257 3 13 Zp1SZuFNXD53OU7KKOG4eVCnSDJQ5xNpHamH4HM3M6MaCbHD9joe+7mU V5F15B5M...
+//mitid.dk.   5534    IN      DNSKEY  257 3 13 8gcnnjVQPkfmZxU+zFq30jGnLlfbqoUOtBB/8BNe5jITZY/eZJegufWj DZjKVt9J...
+//mitid.dk.   5534    IN      RRSIG   DNSKEY 13 2 7200 20251106084733 20251103074733 3949 mitid.dk. axtWTuBQENcW...
+//mitid.dk.   5534    IN      RRSIG   DNSKEY 13 2 7200 20251106084733 20251103074733 44941 mitid.dk. JxDw7V91O4R...
+//```
+//Ther is four DNSKEYs keys 2 fom them are are teh ZSK and the 2 other is KSK.  ths ZSK is used for
+//singning recoes like MX, A and .. . wher ethe the  KSK is snign PRset the flag is reslfenrif 256
+//for ZSK and 257 for KSK. the 3 is the protocl for DSNKEY and the 13 is the aligoeshd as mesntion
+//"ECDSA Curve P-256 with SHA-256" and next is the pubkey key, that wil be suef for werify the
+//singreutre for the RRSIG and here si the Key tag komiung into play sinece htis is colcuriton the
+//slignere. and the "PRSIG DNSKEY" is a diffrint singruere for hte DNSKEY that is being used for 
+//verinign the DNSKEY. \
+//
+//
+//#v(2em)
+//
+//THe next part is undersfing the DS to
+//
+//```bash
+//$ dig @1.1.1.1 +dnssec DS mitid.dk 
+//mitid.dk.    6060    IN      DS      44941 13 2 6DA9443050311FF6DE9762995A6A640B55D76CFFB1E4EFA45CA82536 4E5...
+//mitid.dk.    6060    IN      RRSIG   DS 13 2 7200 20251129104202 20251101091202 50934 dk. qjmeMFyQSUdjY0Y0fk...
+//```
+//The DS reacoed is the reocueid for hte DNSKEY for root parrnt  whwew is the 13 is the same
+//algorhemed used "ECDSA Curve P-256 with SHA-256", and and the singrute is the hash of a pucliky
+//that will be vlaueded. tehre is also a RRSIG for the DS and htis 
+
+
+
+
+#pagebreak()
+
 = Appendix section
 
 == Digital Signatures in practice in: 6.2
 
+
 #let pythonFile = read("/morduls/m6sig.py")
+
 #code(pythonFile, lang: "python")
-
-
-
 
